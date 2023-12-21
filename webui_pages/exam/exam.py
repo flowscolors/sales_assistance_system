@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_chatbox import *
 import random
+from ..utils import compare_text_similarity,get_knowledge_base_file_content,get_knowledge_base_list_files
 
 chat_box = ChatBox()
 
@@ -13,18 +14,52 @@ qa_pairs = {
     "什么是汽车保险？": "汽车保险是车主购买的保单，以降低因发生汽车事故而产生的费用。"
 }
 
-def calculate_score(query):
+def calculate_score(query,answer):
     # 在这里实现你的打分逻辑
-    score = round(random.uniform(1, 100), 2)
-    return score
+    # score = round(random.uniform(1, 100), 2)
+    # print(compare_text_similarity("hello", "world"))
+
+    score = compare_text_similarity(query, answer)
+    return round(score * 100, 2)
+
+def extract_qa_pairs(text):
+    # 分割字符串以获取独立的QA对，直接以换行进行分割
+    qa_list = text.split('\r\n')
+    print("qa_list :")
+    print(qa_list)
+    qa_pairs = {}
+
+    # 遍历列表，跳过空字符串，并提取QA对
+    for i in range(0, len(qa_list), 3):  # 步长为3，因为每个Q和A之后跟着一个空字符串
+        question = qa_list[i].split(': ')[1].strip()  # 提取问题文本
+        answer = qa_list[i + 1].split(': ')[1].strip()  # 提取答案文本
+        qa_pairs[question] = answer
+
+    return qa_pairs
 
 def exam_page():
     st.title('Exam Page')
+
+    # 在页面最上方添加一个下拉框
+    BASE_DIR = "F:\\project\\Langchain-Chatchat\\knowledge_base\\sales\\content\\"
+    dropdown_options = get_knowledge_base_list_files()
+    filtered_options = [option for option in dropdown_options if option.endswith('5-qa.txt')]
+
+    if filtered_options:
+        selected_option = st.selectbox("选择一个文件", options=filtered_options)
+        # print(selected_option)
+
+        text = get_knowledge_base_file_content(BASE_DIR + selected_option)
+        # print(text)
+        # 使用函数提取QA对
+        qa_pairs = extract_qa_pairs(text)
+        print(qa_pairs)
+
     chat_box.init_session()  # 初始化会话
 
     # 初始化 session state
-    if 'qa_index' not in st.session_state:
-        st.session_state.qa_index = 0
+    if 'exam_index' not in st.session_state:
+        st.session_state.exam_index = 0
     if 'scores' not in st.session_state:
         st.session_state.scores = []
 
@@ -33,17 +68,17 @@ def exam_page():
     answers = list(qa_pairs.values())
 
     # 开始问答
-    if st.session_state.qa_index < len(questions):
-        chat_box.ai_say("问题" + str(st.session_state.qa_index+1) + "： " + questions[st.session_state.qa_index])
+    if st.session_state.exam_index < len(questions):
+        chat_box.ai_say("问题" + str(st.session_state.exam_index+1) + "： " + questions[st.session_state.exam_index])
         if query := st.chat_input('input your answer here'):
             chat_box.user_say(query)
-            score = calculate_score(query)
+            score = calculate_score(query,answers[st.session_state.exam_index])
             chat_box.ai_say("得分： " + str(score))
-            chat_box.ai_say("正确答案是： " + answers[st.session_state.qa_index])
+            chat_box.ai_say("正确答案是： " + answers[st.session_state.exam_index])
             st.session_state.scores.append(score)
-            st.session_state.qa_index += 1
+            st.session_state.exam_index += 1
 
-            if st.session_state.qa_index <= len(questions):
+            if st.session_state.exam_index <= len(questions):
                 if st.button("下一题"):
                     pass
 
