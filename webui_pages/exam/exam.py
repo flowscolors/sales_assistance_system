@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_chatbox import *
 import random
+from ..utils import compare_text_similarity,get_knowledge_base_file_content
 
 chat_box = ChatBox()
 
@@ -20,6 +21,11 @@ def calculate_score(query):
 
 def exam_page():
     st.title('Exam Page')
+    print(compare_text_similarity("hello","world"))
+    print(compare_text_similarity("11111", "11111"))
+    print(compare_text_similarity("保险是一种合同，由保单代表，其中个人或实体从保险公司获得对损失的经济保护或补偿。", "保险是一种合同，由保单代表，其中个人或实体从保险公司获得对损失的经济保护或补偿。"))
+
+    print(get_knowledge_base_file_content("F:\\project\\Langchain-Chatchat\\knowledge_base\\samples\\content\\test_files\\test.txt"))
     chat_box.init_session()  # 初始化会话
 
     # 初始化 session state

@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_chatbox import *
+from ..utils import get_knowledge_base_list_files
 
 chat_box = ChatBox()
 
@@ -14,6 +15,12 @@ qa_pairs = {
 
 def learn_page():
     st.title('Learn Page')
+
+    # 在页面最上方添加一个下拉框
+    dropdown_options = get_knowledge_base_list_files()
+    if dropdown_options:
+        selected_option = st.selectbox("选择一个文件", options=dropdown_options)
+
     chat_box.init_session()  # 初始化会话
 
     # 初始化 session state

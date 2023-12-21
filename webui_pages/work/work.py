@@ -2,18 +2,26 @@ import streamlit as st
 from streamlit_chatbox import *
 import requests
 import json
+from ..utils import chat_with_knowledge_base
 
 chat_box = ChatBox()
+
+
 class SessionState:
     def __init__(self):
         self.messages = []
         self.recommendations = []
 
+
 # 在这里实现获取推荐回复的逻辑,现在回复使用以下默认值
-def get_recommendations(messages):
+def get_recommendations(query, messages):
     if len(messages) > 0:
-        return ["I'm sorry, I don't know how to respond to that yet.But I will be ok soon."]
+        print(f"messages: {messages}")
+        answer = chat_with_knowledge_base(query, messages)
+        print(f"Answer: {answer}")
+        return [answer]
     return []
+
 
 # 调用chatchat API，提供参数封装
 def get_response(question):
@@ -32,8 +40,10 @@ def get_response(question):
     print(response.json())
     return response.json()
 
+
 # 调用chatchat API，输入query，得到返回
-def post_chat(query, knowledge_base_name, top_k, score_threshold, history, stream, model_name, temperature, local_doc_url):
+def post_chat(query, knowledge_base_name, top_k, score_threshold, history, stream, model_name, temperature,
+              local_doc_url):
     url = "http://127.0.0.1:7861/chat/knowledge_base_chat"
     headers = {
         'accept': 'application/json',
@@ -52,6 +62,8 @@ def post_chat(query, knowledge_base_name, top_k, score_threshold, history, strea
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
     return response
+
+
 def work_page():
     st.title('Work Page')
 
@@ -67,9 +79,8 @@ def work_page():
         st.chat_message("user").markdown(prompt)
         session_state.messages.append({"role": "user", "content": prompt})
         response = f"Echo: {prompt}"
-        st.text("推荐回复:  " + str(get_recommendations(session_state.messages)))
+        st.markdown("推荐回复:  " + str(get_recommendations(prompt, session_state.messages)))
         with st.chat_message("assistant"):
             st.markdown(response)
         session_state.messages.append({"role": "assistant", "content": response})
-        session_state.recommendations = get_recommendations(session_state.messages)
-
+        session_state.recommendations = get_recommendations(prompt, session_state.messages)
