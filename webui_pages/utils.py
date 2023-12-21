@@ -8,27 +8,14 @@ import os
 
 CHATGLM_API_ENDPOINT = "http://127.0.0.1:7861/"
 
-# 定义问答对
-qa_pairs = {
-    "什么是保险？": "保险是一种合同，由保单代表，其中个人或实体从保险公司获得对损失的经济保护或补偿。",
-    "保险中的保费是什么？": "保费是您的保险公司为您选择的保险计划收取的金额，通常每月支付一次，但可以根据您的保险公司和您的具体保险类型以不同方式进行计费。",
-    "保险中的免赔额是什么？": "免赔额是您在健康保险开始支付之前支付的医疗服务费用。",
-    "什么是人寿保险？": "人寿保险是保单持有人和保险公司之间的合同，其中保险公司承诺在被保人死亡时向指定受益人支付一笔钱。",
-    "什么是汽车保险？": "汽车保险是车主购买的保单，以降低因发生汽车事故而产生的费用。"
-}
 
-QA_PROMPT = '<指令>根据已知信息，确保你已理解相关内容，请以简洁和专业的语言，基于已知信息的内容，生成5个QA对，格式如下：Q:... A:...，.QA对请使用中文。 </指令>\n' \
-            '<已知信息>{{ context }}</已知信息>\n' \
-            '<问题>{{ question }}</问题>\n'
-
-
-def echo(text):
-    # test utils
-    return "wwwwwwwwwwwwww"
+#QA_PROMPT = '<指令>根据已知信息，确保你已理解相关内容，请以简洁和专业的语言，基于已知信息的内容，生成5个QA对，格式如下：Q:... A:...，.QA对请使用中文。 </指令>\n' \
+#            '<已知信息>{{ context }}</已知信息>\n' \
+#            '<问题>{{ question }}</问题>\n'
 
 def make_question(text:str) -> str:
-    return '根据以下文本，简洁和专业的生成相关的问答对（Q&A）：' + text[:1000] + '请按照以下格式提供问答对: [{"question" : "问题1",  "answer" : "回答1"}，{"question" ' \
-                                                                      ': "问题2",  "answer" : "回答2"}]。请生成至少五个相关的问答对。'
+    return '根据以下文本，确保你已理解相关内容，请以简洁和专业的语言，基于已知信息的内容，生成5个问答对(Q&A)：' + text[:1000] + '请按照以下格式提供问答对: [{"Q1" : "问题1",  "A1" : "回答1"},\
+            {"Q2" : "问题2",  "A2" : "回答2"},{"Q3" : "问题3",  "A3" : "回答3"},{"Q4" : "问题4",  "A4" : "回答4"},{"Q5" : "问题5",  "A5" : "回答5"}]。问题和回答之间使用换行进行间隔，生成5个问答对(Q&A)。'
 
 # 从chatglm API获取Q&A对的函数
 def get_qa_pairs(text):
@@ -49,8 +36,7 @@ def get_qa_pairs(text):
         "max_tokens": 0,
         "prompt_name": "default"
     }
-    print(url)
-    print(data)
+
     response = requests.post(url, headers=headers, data=json.dumps(data))
     print(response.json())
     if response.status_code == 200:
@@ -104,10 +90,12 @@ def upload_txt_to_knowledge_base(content_str: str, filename: str):
     # 删除临时文件
     os.remove(temp_file_path)
 
-    if response.status_code == 200:
-        return response.json()  # 操作成功，返回 JSON 数据
-    else:
-        return response.text  # 操作失败，返回错误信息
+    #if response.status_code == 200:
+    #    return response.json()  # 操作成功，返回 JSON 数据
+    #else:
+    #    return response.text  # 操作失败，返回错误信息
+
+    return response
 
 def upload_pdf_to_knowledge_base(pdf_file):
     url = CHATGLM_API_ENDPOINT + "knowledge_base/upload_docs"
@@ -144,11 +132,12 @@ def upload_pdf_to_knowledge_base(pdf_file):
     # 发起请求
     response = requests.post(url, headers=headers, files=files, data=data)
 
-    # 处理响应
-    if response.status_code == 200:
-        return response.json()  # 操作成功，返回 JSON 数据
-    else:
-        return response.text  # 操作失败，返回错误信息
+    #if response.status_code == 200:
+    #    return response.json()  # 操作成功，返回 JSON 数据
+    #else:
+    #    return response.text  # 操作失败，返回错误信息
+
+    return response
 
 
 def get_knowledge_base_list_files():
@@ -169,7 +158,7 @@ def get_knowledge_base_list_files():
 def get_knowledge_base_file_content(file_name: str) -> str:
     url = CHATGLM_API_ENDPOINT + "knowledge_base/download_doc"
     params = {
-        "knowledge_base_name": "samples",
+        "knowledge_base_name": "sales",
         "file_name": file_name,
         "preview": "true"
     }
@@ -234,7 +223,7 @@ def chat_with_knowledge_base(query: str,history) -> str:
     }
     payload = {
         "query": query,
-        "knowledge_base_name": "samples",
+        "knowledge_base_name": "sales",
         "top_k": 3,
         "score_threshold": 1,
         "history": history,
